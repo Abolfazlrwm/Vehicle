@@ -2,20 +2,22 @@
 #define MOTOR_H
 
 #include "Vehicle.h"
+#include "Saleable.h"
+#include "Rentable.h"
 
-class Motor : public Vehicle
+class Motor : public Vehicle, public Saleable, public Rentable
 {
-private:
-    double salePrice;
-    double rentPrice;
+    double salePrice, rentPrice;
     bool rented;
 
 public:
-    Motor(string f, string m, string c, int md, int ms, double s, double r);
+    Motor(string f, string m, string c, int md, int ms, double sp, double rp);
     void showInfo() const override;
     void drive() const override;
-    bool rent(int days);
-    void sell();
+    void sell() override;
+    bool rent(int) override;
+    void returnItem() override;
+    double calculateRentalCost(int) const override;
 };
 
 #endif

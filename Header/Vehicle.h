@@ -7,17 +7,14 @@ using namespace std;
 
 class Vehicle
 {
-protected:
-    string factory;
-    string model;
-    string color;
-    int makeDate;
-    int maxSpeed;
-
 public:
+    string factory, model, color;
+    int makeDate, maxSpeed;
+
     Vehicle(string f, string m, string c, int md, int ms);
-    virtual void showInfo() const;
-    virtual void drive() const;
+
+    virtual void showInfo() const = 0;
+    virtual void drive() const = 0;
     virtual ~Vehicle() {}
 };
 
