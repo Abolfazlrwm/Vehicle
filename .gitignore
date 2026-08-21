@@ -1,0 +1,9 @@
+build/
+*.o
+*.out
+data/inventory.json
+data/transactions.json
+test_inventory.json
+test_transactions.json
+.vscode/
+.idea/
