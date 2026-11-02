@@ -1,26 +1,41 @@
 #pragma once
-#include <string>
+#include <iosfwd>
 #include <nlohmann/json.hpp>
+#include <string>
 
 using json = nlohmann::json;
 
 /**
  * @brief Abstract base class representing any vehicle in the system.
  *
- * All concrete vehicle types (Car, Bicycle, Motorcycle, ...) derive from
- * this class and must implement showInfo() and drive(). Polymorphic
- * behaviour for selling / renting is added separately via the Saleable
- * and Rentable interfaces so a vehicle only "opts in" to the
- * capabilities it actually has.
+ * All concrete vehicle types (Car, Bicycle, Motorcycle, Truck, ...) derive
+ * from this class. Polymorphic behaviour for selling / renting is added
+ * separately via the Saleable and Rentable interfaces, so a vehicle only
+ * "opts in" to the capabilities it actually has.
+ *
+ * Instances are uniquely owned by the Inventory through
+ * std::unique_ptr<Vehicle>, therefore copying and moving are disabled.
  */
 class Vehicle {
 public:
-    Vehicle(int id, std::string factory, std::string model,
-            std::string color, int makeYear, int maxSpeed);
+    Vehicle(int id, std::string factory, std::string model, std::string color, int makeYear,
+            int maxSpeed);
     virtual ~Vehicle() = default;
 
-    virtual void showInfo() const = 0;
+    // Each vehicle is uniquely owned by the Inventory (RAII) — no copies.
+    Vehicle(const Vehicle&) = delete;
+    Vehicle& operator=(const Vehicle&) = delete;
+    Vehicle(Vehicle&&) = delete;
+    Vehicle& operator=(Vehicle&&) = delete;
+
+    /// Human-readable one-line description. UI goes to any stream, so
+    /// unit tests can capture it with a std::ostringstream.
+    virtual void showInfo(std::ostream& os) const = 0;
+
+    /// Polymorphic behaviour demo (the CLI "test drive" option).
     virtual void drive() const = 0;
+
+    /// Class name used for JSON serialization, search and statistics.
     virtual std::string typeName() const = 0;
 
     virtual json toJson() const;

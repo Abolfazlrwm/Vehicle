@@ -1,7 +1,8 @@
 #pragma once
-#include "Vehicle.hpp"
-#include "Saleable.hpp"
+#include <memory>
 #include "Rentable.hpp"
+#include "Saleable.hpp"
+#include "Vehicle.hpp"
 
 /**
  * @brief A motorcycle. Both sellable and rentable at the same time,
@@ -10,15 +11,19 @@
  */
 class Motorcycle : public Vehicle, public Saleable, public Rentable {
 public:
-    Motorcycle(int id, std::string factory, std::string model, std::string color,
-               int makeYear, int maxSpeed, double price, double rentPricePerDay);
+    /// `sold` / `rented` restore persisted state when loading from disk.
+    /// A motorcycle is never both sold and rented at once; if a JSON
+    /// record contains both flags, `sold` wins.
+    Motorcycle(int id, std::string factory, std::string model, std::string color, int makeYear,
+               int maxSpeed, double listPrice, double rentPricePerDay, bool sold = false,
+               bool rented = false);
 
-    void showInfo() const override;
+    void showInfo(std::ostream& os) const override;
     void drive() const override;
     std::string typeName() const override { return "Motorcycle"; }
     json toJson() const override;
 
-    double price() const override { return price_; }
+    double listPrice() const override { return price_; }
     bool isSold() const override { return sold_; }
     bool sell() override;
 
@@ -27,6 +32,9 @@ public:
     bool rent(int days) override;
     bool returnItem() override;
     double calculateRentalCost(int days) const override;
+
+    /// Rebuilds a Motorcycle from its JSON representation (VehicleFactory).
+    static std::unique_ptr<Vehicle> fromJson(const json& j);
 
 private:
     double price_;

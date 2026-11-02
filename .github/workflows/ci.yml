@@ -2,23 +2,68 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [main, master]
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   build-and-test:
+    name: ${{ matrix.os }} / ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        build_type: [Release, Debug]
+        exclude:
+          # Keep CI time reasonable: debug builds only on Linux.
+          - os: macos-latest
+            build_type: Debug
+          - os: windows-latest
+            build_type: Debug
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }} --parallel 4
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -C ${{ matrix.build_type }}
+
+  sanitizers:
+    name: ASan + UBSan
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: >
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
 
       - name: Build
-        run: cmake --build build -j4
+        run: cmake --build build --parallel 4
 
-      - name: Test
-        working-directory: build
-        run: ctest --output-on-failure
+      - name: Test under sanitizers
+        run: ctest --test-dir build --output-on-failure
+
+  format:
+    name: clang-format
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: pip install clang-format
+
+      - name: Check formatting
+        run: |
+          find src include tests -name '*.cpp' -o -name '*.hpp' | \
+            xargs clang-format --dry-run -Werror

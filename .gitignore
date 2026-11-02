@@ -1,9 +1,23 @@
+# Build directories
 build/
-*.o
-*.out
-data/inventory.json
-data/transactions.json
-test_inventory.json
-test_transactions.json
+build-*/
+cmake-build-*/
+out/
+
+# Runtime data produced by the app (schema lives in README; .gitkeep keeps data/)
+data/*.json
+data/*.csv
+data/*.tmp
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+CMakeUserPresets.json
+compile_commands.json
+
+# IDE / editor
 .vscode/
 .idea/
+*.swp
+.DS_Store
